@@ -1,15 +1,23 @@
 # Formula 1 Data Engineering Pipeline
 
-This project is an end-to-end data engineering pipeline built using Formula 1 historical racing data.
+End-to-end data pipeline using Formula 1 racing data from historical Ergast CSVs (pre-2023) and the Jolpica F1 API (2023+).
 
 ## Architecture
 
-```mermaid
-graph TD
-    A[Jolpica F1 API / Ergast Mirror] -->|Python / requests| B(Raw Layer - data/raw/*.csv, *.json)
-    B -->|PySpark Ingest| C(Bronze Layer - data/bronze/*.parquet)
-    C -->|PySpark Clean & Deduplicate| D(Silver Layer - data/silver/*.parquet)
-    D -->|load_to_warehouse.py| E[(PostgreSQL - silver schema)]
-    E -->|dbt run & dbt test| F[(PostgreSQL - gold schema)]
-    F -->|SQL query / Streamlit| G[Streamlit Dashboard]
 ```
+                          RAW LAYER                         STORAGE
+                          ---------                         -------
+
+Ergast CSV (pre-2023) ──> ingest_historical.py ──> data/raw/*.csv ──┐
+                                                                     ├──> Pandas ──> PostgreSQL
+Jolpica API (2023+)  ──> ingest_jolpica.py ──> data/raw/jolpica/{year}/*.json ──┘
+                                            ↕
+                                      ingest_main.py (orchestrator)
+```
+
+## Data Sources
+
+| Source                                                   | Period        | Type                     | Update Frequency  |
+| -------------------------------------------------------- | ------------- | ------------------------ | ----------------- |
+| [Ergast CSV Mirror](https://github.com/rubenv/ergast-mrd) | 1950–2022    | CSV (historical archive) | One-time download |
+| [Jolpica F1 API](https://api.jolpi.ca/ergast/f1)          | 2023–current | JSON (live API)          | After each race   |
