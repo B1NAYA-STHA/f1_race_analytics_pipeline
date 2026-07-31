@@ -1,4 +1,5 @@
 import argparse
+import sys
 import time
 from datetime import datetime
 
@@ -19,6 +20,23 @@ YEAR_FILES = (
     | {f"{ep}.json" for ep in ROUND_ENDPOINTS}
 )
 
+HISTORICAL_TABLES = [
+    "seasons",
+    "status",
+    "circuits",
+    "drivers",
+    "constructors",
+    "races",
+    "results",
+    "qualifying",
+    "sprint_results",
+    "lap_times",
+    "pit_stops",
+    "driver_standings",
+    "constructor_standings",
+    "constructor_results",
+]
+
 
 def is_year_complete(year: int) -> bool:
     year_dir = JOLPICA_DIR / str(year)
@@ -29,8 +47,10 @@ def is_year_complete(year: int) -> bool:
 
 
 def is_historical_complete() -> bool:
-    csv_files = list(RAW_DIR.glob("*.csv"))
-    return len(csv_files) > 0
+    if not RAW_DIR.is_dir():
+        return False
+    existing = {f.name for f in RAW_DIR.glob("*.csv") if f.stat().st_size > 0}
+    return {f"{t}.csv" for t in HISTORICAL_TABLES}.issubset(existing)
 
 
 def main():
@@ -78,6 +98,7 @@ def main():
         years = range(API_START_YEAR, datetime.now().year + 1)
 
     t0 = time.time()
+    failed = []
     for year in years:
         complete = is_year_complete(year)
         is_current = year == datetime.now().year
@@ -92,7 +113,16 @@ def main():
         else:
             print(f"[{year}] Incomplete or --force, fetching...")
 
-        ingest_year(year)
+        try:
+            # Current year: full season endpoints + incremental round updates
+            ingest_year(
+                year,
+                force=args.force or is_current,
+                incremental_rounds=is_current and not args.force,
+            )
+        except Exception as e:
+            print(f"[{year}] FAILED: {e}")
+            failed.append(year)
 
     elapsed = time.time() - t0
 
@@ -103,7 +133,11 @@ def main():
     for year in years:
         status = "complete" if is_year_complete(year) else "INCOMPLETE"
         print(f"  {year}: {status}")
+    if failed:
+        print(f"\n  Failed years: {failed}")
+
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
