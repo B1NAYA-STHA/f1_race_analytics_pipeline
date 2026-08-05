@@ -32,7 +32,13 @@ def test_is_year_complete_returns_true_when_all_files_present(tmp_path):
 
 def _write_all_historical(tmp_path):
     for table in ingest_main.HISTORICAL_TABLES:
-        (tmp_path / f"{table}.csv").write_text("a,b,c")
+        if table == "races":
+            (tmp_path / "races.csv").write_text(
+                "raceId,year,round,circuitId,name,date,time,url\n"
+                "1096,2024,1,1,name,2024-03-02,00:00:00,u\n"
+            )
+        else:
+            (tmp_path / f"{table}.csv").write_text("a,b,c\n")
 
 
 def test_is_historical_complete_returns_true_with_csvs(tmp_path):
@@ -40,6 +46,17 @@ def test_is_historical_complete_returns_true_with_csvs(tmp_path):
 
     with patch("ingest_main.RAW_DIR", new=tmp_path):
         assert ingest_main.is_historical_complete() is True
+
+
+def test_is_historical_complete_returns_false_when_races_stale(tmp_path):
+    _write_all_historical(tmp_path)
+    (tmp_path / "races.csv").write_text(
+        "raceId,year,round,circuitId,name,date,time,url\n"
+        "1096,2022,1,1,name,2022-03-20,00:00:00,u\n"
+    )
+
+    with patch("ingest_main.RAW_DIR", new=tmp_path):
+        assert ingest_main.is_historical_complete() is False
 
 
 def test_is_historical_complete_returns_false_without_csvs(tmp_path):
