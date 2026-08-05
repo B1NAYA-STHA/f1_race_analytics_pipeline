@@ -57,6 +57,24 @@ def req(url: str) -> dict:
     return rate_limited_request(url)
 
 
+def fetch_paginated(url: str) -> dict:
+    """Fetch an endpoint, following pagination until all rows are collected."""
+    data = req(url)
+    mrd = data["MRData"]
+    table = next(v for k, v in mrd.items() if isinstance(v, dict))
+    list_key = next(k for k, v in table.items() if isinstance(v, list))
+    offset = len(table[list_key])
+    while offset < int(mrd["total"]):
+        page = req(f"{url}?limit={PAGE_LIMIT}&offset={offset}")
+        pm = page["MRData"]
+        ptable = next(v for k, v in pm.items() if isinstance(v, dict))
+        plist_key = next(k for k, v in ptable.items() if isinstance(v, list))
+        table[list_key].extend(ptable[plist_key])
+        offset = len(table[list_key])
+    mrd["limit"] = str(len(table[list_key]))
+    return data
+
+
 def write_json_atomic(path, payload: dict) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2))
@@ -70,7 +88,7 @@ def fetch_global_endpoints(force: bool = False):
             print(f"  [SKIP] {ep}.json exists (use --force to re-fetch)")
             continue
         print(f"  Fetching {ep}...", end=" ")
-        data = req(f"{JOLPICA_BASE}/{ep}.json")
+        data = fetch_paginated(f"{JOLPICA_BASE}/{ep}.json")
         out.parent.mkdir(parents=True, exist_ok=True)
         write_json_atomic(out, data)
         print(f"saved (total={data['MRData']['total']})")
@@ -276,7 +294,7 @@ def ingest_year(year: int, force: bool = False, incremental_rounds: bool = False
     def fetch_season_endpoint(ep: str):
         url = f"{JOLPICA_BASE}/{year}/{ep}.json"
         print(f"  {ep}: ", end="")
-        data = req(url)
+        data = fetch_paginated(url)
         print(f"saved (total={data['MRData']['total']})")
         write_json_atomic(year_dir / f"{ep}.json", data)
 

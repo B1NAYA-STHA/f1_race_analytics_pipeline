@@ -10,7 +10,10 @@ from constants import (
     GLOBAL_ENDPOINTS,
     SEASON_ENDPOINTS,
     ROUND_ENDPOINTS,
+    HISTORICAL_EXPECTED_LAST_YEAR,
+    HISTORICAL_TABLES,
 )
+from utils import races_last_year
 
 # File sets derived from endpoint lists so they stay in sync
 GLOBAL_FILES = {f"{ep}.json" for ep in GLOBAL_ENDPOINTS}
@@ -19,23 +22,6 @@ YEAR_FILES = (
     | {f"{ep}.json" for ep in SEASON_ENDPOINTS}
     | {f"{ep}.json" for ep in ROUND_ENDPOINTS}
 )
-
-HISTORICAL_TABLES = [
-    "seasons",
-    "status",
-    "circuits",
-    "drivers",
-    "constructors",
-    "races",
-    "results",
-    "qualifying",
-    "sprint_results",
-    "lap_times",
-    "pit_stops",
-    "driver_standings",
-    "constructor_standings",
-    "constructor_results",
-]
 
 
 def is_year_complete(year: int) -> bool:
@@ -50,7 +36,11 @@ def is_historical_complete() -> bool:
     if not RAW_DIR.is_dir():
         return False
     existing = {f.name for f in RAW_DIR.glob("*.csv") if f.stat().st_size > 0}
-    return {f"{t}.csv" for t in HISTORICAL_TABLES}.issubset(existing)
+    if not {f"{t}.csv" for t in HISTORICAL_TABLES}.issubset(existing):
+        return False
+    # Content check: races.csv must reach the expected last year
+    last_year = races_last_year(RAW_DIR / "races.csv")
+    return last_year is not None and last_year >= HISTORICAL_EXPECTED_LAST_YEAR
 
 
 def main():
