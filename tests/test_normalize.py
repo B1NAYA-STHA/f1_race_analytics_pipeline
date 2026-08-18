@@ -1,9 +1,9 @@
 import csv
 import json
 
-import normalize
-from bronze_schemas import SCHEMAS
-from utils import time_str_to_millis, write_csv
+from src.normalize.normalize import normalize
+from src.bronze_schemas import SCHEMAS
+from src.utils import time_str_to_millis, write_csv
 
 
 def test_time_str_to_millis():
@@ -446,7 +446,7 @@ def test_normalize_unifies_historical_and_api(tmp_path):
 
     _make_historical(raw_dir)
     _make_jolpica(jolpica_dir)
-    normalize.normalize(
+    normalize(
         raw_dir=raw_dir, jolpica_dir=jolpica_dir, bronze_dir=bronze_dir, start_year=2026
     )
 
