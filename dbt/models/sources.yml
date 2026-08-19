@@ -1,0 +1,20 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: "{{ env_var('POSTGRES_DB') }}"
+    schema: bronze
+    tables:
+      - name: seasons
+      - name: status
+      - name: circuits
+      - name: drivers
+      - name: constructors
+      - name: races
+      - name: results
+      - name: qualifying
+      - name: sprint_results
+      - name: lap_times
+      - name: pit_stops
+      - name: driver_standings
+      - name: constructor_standings

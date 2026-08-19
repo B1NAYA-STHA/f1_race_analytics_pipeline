@@ -1,0 +1,252 @@
+version: 2
+
+models:
+  - name: dim_drivers
+    columns:
+      - name: driver_id
+        tests:
+          - unique
+          - not_null
+      - name: driver_ref
+        tests:
+          - not_null
+      - name: date_of_birth
+        tests: []
+
+  - name: dim_constructors
+    columns:
+      - name: constructor_id
+        tests:
+          - unique
+          - not_null
+      - name: constructor_ref
+        tests:
+          - not_null
+      - name: name
+        tests:
+          - not_null
+
+  - name: dim_circuits
+    columns:
+      - name: circuit_id
+        tests:
+          - unique
+          - not_null
+      - name: circuit_ref
+        tests:
+          - not_null
+      - name: name
+        tests:
+          - not_null
+      - name: country
+        tests:
+          - not_null
+
+  - name: dim_races
+    columns:
+      - name: race_id
+        tests:
+          - unique
+          - not_null
+      - name: year
+        tests:
+          - not_null
+      - name: round
+        tests:
+          - not_null
+      - name: circuit_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_circuits')
+              field: circuit_id
+
+  - name: dim_status
+    columns:
+      - name: status_id
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - not_null
+      - name: status_category
+        tests:
+          - not_null
+
+  - name: dim_seasons
+    columns:
+      - name: year
+        tests:
+          - unique
+          - not_null
+
+  - name: fact_results
+    columns:
+      - name: result_id
+        tests:
+          - unique
+          - not_null
+      - name: race_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_races')
+              field: race_id
+      - name: driver_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_drivers')
+              field: driver_id
+      - name: constructor_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_constructors')
+              field: constructor_id
+      - name: status_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_status')
+              field: status_id
+      - name: points
+        tests:
+          - not_null
+
+  - name: fact_qualifying
+    columns:
+      - name: qualify_id
+        tests:
+          - unique
+          - not_null
+      - name: race_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_races')
+              field: race_id
+      - name: driver_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_drivers')
+              field: driver_id
+      - name: constructor_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_constructors')
+              field: constructor_id
+
+  - name: fact_sprint_results
+    columns:
+      - name: sprint_result_id
+        tests:
+          - unique
+          - not_null
+      - name: race_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_races')
+              field: race_id
+      - name: driver_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_drivers')
+              field: driver_id
+      - name: constructor_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_constructors')
+              field: constructor_id
+      - name: status_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_status')
+              field: status_id
+
+  - name: fact_lap_times
+    columns:
+      - name: race_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_races')
+              field: race_id
+      - name: driver_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_drivers')
+              field: driver_id
+      - name: lap_number
+        tests:
+          - not_null
+
+  - name: fact_pit_stops
+    columns:
+      - name: race_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_races')
+              field: race_id
+      - name: driver_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_drivers')
+              field: driver_id
+      - name: stop_number
+        tests:
+          - not_null
+
+  - name: fact_driver_standings
+    columns:
+      - name: driver_standings_id
+        tests:
+          - unique
+          - not_null
+      - name: race_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_races')
+              field: race_id
+      - name: driver_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_drivers')
+              field: driver_id
+      - name: points
+        tests:
+          - not_null
+
+  - name: fact_constructor_standings
+    columns:
+      - name: constructor_standings_id
+        tests:
+          - unique
+          - not_null
+      - name: race_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_races')
+              field: race_id
+      - name: constructor_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_constructors')
+              field: constructor_id
+      - name: points
+        tests:
+          - not_null
