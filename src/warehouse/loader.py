@@ -3,11 +3,10 @@
 import sys
 import logging
 from pathlib import Path
-from typing import Optional, List, Literal
+from typing import List, Literal
 
 import pandas as pd
 from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.orm import Session
 
 from config import DatabaseConfig, AppConfig
 from postgres_schema import BRONZE_SCHEMA, get_all_bronze_create_statements
