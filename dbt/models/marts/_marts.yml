@@ -1,0 +1,177 @@
+version: 2
+
+models:
+  - name: race_results_detail
+    description: "Central race results mart - one row per driver per race with all dimensional context"
+    columns:
+      - name: race_driver_key
+        description: "Surrogate key for the driver-race combination (unique per row)"
+        tests: [unique, not_null]
+      - name: driver_key
+        description: "Surrogate key for the driver"
+        tests: [not_null]
+      - name: constructor_key
+        description: "Surrogate key for the constructor"
+        tests: [not_null]
+      - name: circuit_key
+        description: "Surrogate key for the circuit"
+        tests: [not_null]
+      - name: status_key
+        description: "Surrogate key for the race status"
+        tests: [not_null]
+      - name: season
+        description: "F1 season year"
+        tests: [not_null]
+      - name: round
+        description: "Race round number in season"
+        tests: [not_null]
+      - name: race_name
+        description: "Official race name (e.g., 'Austrian Grand Prix')"
+        tests: [not_null]
+      - name: race_date
+        description: "Race date"
+        tests: [not_null]
+      - name: driver_name
+        description: "Full driver name (e.g., 'Max Verstappen')"
+        tests: [not_null]
+      - name: driver_nationality
+        description: "Driver nationality"
+        tests: [not_null]
+      - name: constructor_name
+        description: "Constructor/team name"
+        tests: [not_null]
+      - name: constructor_nationality
+        description: "Constructor nationality"
+        tests: [not_null]
+      - name: circuit_name
+        description: "Circuit name"
+        tests: [not_null]
+      - name: circuit_country
+        description: "Circuit country"
+        tests: [not_null]
+      - name: grid_position
+        description: "Starting grid position"
+        tests: [not_null]
+      - name: finish_position
+        description: "Final race classification position (null for DNFs)"
+        tests: []
+      - name: position_change
+        description: "Positions gained/lost (grid - finish, null for DNFs)"
+        tests: []
+      - name: points
+        description: "Championship points earned"
+        tests: [not_null]
+      - name: laps_completed
+        description: "Number of laps completed"
+        tests: [not_null]
+      - name: status_category
+        description: "Categorized race status (Finished, Accident, Mechanical, etc.)"
+        tests: [not_null]
+      - name: is_dnf
+        description: "Boolean: Did Not Finish (non-Finished status)"
+        tests: [not_null]
+      - name: is_points_finish
+        description: "Boolean: Finished in points-scoring position"
+        tests: [not_null]
+      - name: is_podium
+        description: "Boolean: Finished top 3"
+        tests: [not_null]
+      - name: is_win
+        description: "Boolean: Won the race"
+        tests: [not_null]
+      - name: fastest_lap_rank
+        description: "Rank of fastest lap (1 = fastest)"
+        tests: []
+      - name: source
+        description: "Data lineage: 'historical' or 'api'"
+        tests: [not_null]
+
+  - name: driver_season_summary
+    description: "Driver performance summary per season"
+    columns:
+      - name: driver_id
+        tests: [unique, not_null]
+      - name: season
+        tests: [unique, not_null]
+      - name: driver_name
+        tests: [not_null]
+      - name: team
+        tests: [not_null]
+      - name: races_entered
+        tests: [not_null]
+      - name: wins
+        tests: [not_null]
+      - name: podiums
+        tests: [not_null]
+      - name: points
+        tests: [not_null]
+      - name: poles
+        tests: [not_null]
+      - name: fastest_laps
+        tests: [not_null]
+      - name: dnfs
+        tests: [not_null]
+      - name: avg_finish_position
+        tests: []
+      - name: championship_position
+        tests: []
+      - name: source
+        tests: [not_null]
+
+  - name: constructor_season_summary
+    description: "Constructor performance summary per season"
+    columns:
+      - name: constructor_id
+        tests: [unique, not_null]
+      - name: season
+        tests: [unique, not_null]
+      - name: constructor_name
+        tests: [not_null]
+      - name: races_entered
+        tests: [not_null]
+      - name: wins
+        tests: [not_null]
+      - name: podiums
+        tests: [not_null]
+      - name: points
+        tests: [not_null]
+      - name: one_two_finishes
+        tests: [not_null]
+      - name: poles
+        tests: [not_null]
+      - name: fastest_laps
+        tests: [not_null]
+      - name: dnfs
+        tests: [not_null]
+      - name: championship_position
+        tests: []
+      - name: source
+        tests: [not_null]
+
+  - name: championship_standings
+    description: "Running championship standings after each race"
+    columns:
+      - name: driver_id
+        tests: [not_null]
+      - name: race_id
+        tests: [not_null]
+      - name: season
+        tests: [not_null]
+      - name: round
+        tests: [not_null]
+      - name: driver_name
+        tests: [not_null]
+      - name: team
+        tests: [not_null]
+      - name: cumulative_points
+        tests: [not_null]
+      - name: championship_position
+        tests: [not_null]
+      - name: points_behind_leader
+        tests: [not_null]
+      - name: wins_so_far
+        tests: [not_null]
+      - name: podiums_so_far
+        tests: [not_null]
+      - name: source
+        tests: [not_null]
