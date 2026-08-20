@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='silver',
-    unique_key='year'
+        unique_key='year'
 ) }}
 
 with bronze as (

@@ -36,7 +36,9 @@ models:
   f1_analytics:
     silver:
       +materialized: table
+      +database: "{{ env_var('POSTGRES_DB') }}"
       +schema: silver
     marts:
       +materialized: table
+      +database: "{{ env_var('POSTGRES_DB') }}"
       +schema: marts

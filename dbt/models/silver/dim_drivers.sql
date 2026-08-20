@@ -1,6 +1,5 @@
 {{ config(
     materialized='table',
-    schema='silver',
     unique_key='driver_id'
 ) }}
 

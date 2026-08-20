@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='silver',
-    unique_key='sprint_result_id'
+        unique_key='sprint_result_id'
 ) }}
 
 with bronze as (

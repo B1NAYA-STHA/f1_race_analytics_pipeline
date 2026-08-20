@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='silver',
-    unique_key='status_id'
+        unique_key='status_id'
 ) }}
 
 with bronze as (
