@@ -151,6 +151,9 @@ models:
   - name: championship_standings
     description: "Running championship standings after each race"
     columns:
+      - name: driver_race_key
+        description: "Surrogate key for driver-race combination"
+        tests: [unique, not_null]
       - name: driver_id
         tests: [not_null]
       - name: race_id
@@ -174,4 +177,193 @@ models:
       - name: podiums_so_far
         tests: [not_null]
       - name: source
+        tests: [not_null]
+
+  - name: lap_time_analysis
+    description: "Lap-by-lap pace analysis with deltas to leader and race best"
+    columns:
+      - name: lap_analysis_key
+        description: "Surrogate key for race-driver-lap combination"
+        tests: [unique, not_null]
+      - name: race_id
+        tests: [not_null]
+      - name: driver_id
+        tests: [not_null]
+      - name: lap_number
+        tests: [not_null]
+      - name: lap_ms
+        tests: [not_null]
+      - name: delta_to_leader_ms
+        tests: []
+      - name: delta_to_race_best_ms
+        tests: []
+      - name: is_race_fastest_lap
+        tests: [not_null]
+      - name: is_lap_fastest
+        tests: [not_null]
+      - name: drivers_on_lap
+        tests: [not_null]
+      - name: season
+        tests: [not_null]
+      - name: round
+        tests: [not_null]
+      - name: race_name
+        tests: [not_null]
+      - name: circuit_name
+        tests: [not_null]
+      - name: driver_name
+        tests: [not_null]
+      - name: constructor_name
+        tests: []
+      - name: source
+        tests: [not_null]
+
+  - name: pit_stop_analysis
+    description: "Pit stop strategy analysis with per-stop and cumulative stats"
+    columns:
+      - name: pit_analysis_key
+        description: "Surrogate key for race-driver-stop combination"
+        tests: [unique, not_null]
+      - name: race_id
+        tests: [not_null]
+      - name: driver_id
+        tests: [not_null]
+      - name: stop_number
+        tests: [not_null]
+      - name: stop_ms
+        tests: []
+      - name: total_pit_ms
+        tests: [not_null]
+      - name: total_stops
+        tests: [not_null]
+      - name: is_fastest_stop_in_race
+        tests: [not_null]
+      - name: is_slow_stop
+        tests: [not_null]
+      - name: season
+        tests: [not_null]
+      - name: race_name
+        tests: [not_null]
+      - name: driver_name
+        tests: [not_null]
+      - name: constructor_name
+        tests: []
+      - name: source
+        tests: [not_null]
+
+  - name: qualifying_vs_race
+    description: "Qualifying vs race performance comparison with positions gained/lost"
+    columns:
+      - name: quali_race_key
+        description: "Surrogate key for race-driver combination"
+        tests: [unique, not_null]
+      - name: race_id
+        tests: [not_null]
+      - name: driver_id
+        tests: [not_null]
+      - name: qualifying_position
+        tests: [not_null]
+      - name: grid_position
+        tests: [not_null]
+      - name: finish_position
+        tests: []
+      - name: positions_gained_lost
+        tests: []
+      - name: is_pole
+        tests: [not_null]
+      - name: is_win
+        tests: [not_null]
+      - name: is_podium
+        tests: [not_null]
+      - name: is_dnf
+        tests: [not_null]
+      - name: season
+        tests: [not_null]
+      - name: driver_name
+        tests: [not_null]
+      - name: source
+        tests: []
+
+  - name: driver_career
+    description: "Career statistics per driver (all-time totals)"
+    columns:
+      - name: driver_id
+        tests: [unique, not_null]
+      - name: driver_name
+        tests: [not_null]
+      - name: first_season
+        tests: [not_null]
+      - name: last_season
+        tests: [not_null]
+      - name: seasons
+        tests: [not_null]
+      - name: races_entered
+        tests: [not_null]
+      - name: wins
+        tests: [not_null]
+      - name: podiums
+        tests: [not_null]
+      - name: poles
+        tests: [not_null]
+      - name: fastest_laps
+        tests: [not_null]
+      - name: total_points
+        tests: [not_null]
+      - name: dnfs
+        tests: [not_null]
+      - name: teams_raced_for
+        tests: [not_null]
+      - name: championships_won
+        tests: [not_null]
+
+  - name: constructor_career
+    description: "Career statistics per constructor (all-time totals)"
+    columns:
+      - name: constructor_id
+        tests: [unique, not_null]
+      - name: constructor_name
+        tests: [not_null]
+      - name: first_season
+        tests: [not_null]
+      - name: last_season
+        tests: [not_null]
+      - name: seasons
+        tests: [not_null]
+      - name: races_entered
+        tests: [not_null]
+      - name: wins
+        tests: [not_null]
+      - name: podiums
+        tests: [not_null]
+      - name: poles
+        tests: [not_null]
+      - name: fastest_laps
+        tests: [not_null]
+      - name: total_points
+        tests: [not_null]
+      - name: championships_won
+        tests: [not_null]
+
+  - name: circuit_stats
+    description: "Circuit characteristics and all-time statistics"
+    columns:
+      - name: circuit_id
+        tests: [unique, not_null]
+      - name: circuit_name
+        tests: [not_null]
+      - name: circuit_country
+        tests: [not_null]
+      - name: seasons_hosted
+        tests: [not_null]
+      - name: races_hosted
+        tests: [not_null]
+      - name: first_season
+        tests: [not_null]
+      - name: last_season
+        tests: [not_null]
+      - name: unique_drivers
+        tests: [not_null]
+      - name: total_wins
+        tests: [not_null]
+      - name: total_dnfs
         tests: [not_null]

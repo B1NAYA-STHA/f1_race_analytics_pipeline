@@ -22,7 +22,8 @@ with circuit_races as (
         rrd.laps_completed,
         rrd.status_category,
         rrd.pit_stop_count,
-        rrd.total_pit_ms
+        rrd.total_pit_ms,
+        rrd.source
     from {{ ref('race_results_detail') }} rrd
 ),
 circuit_agg as (
