@@ -83,7 +83,14 @@ def fetch_paginated(url: str) -> dict:
 def write_json_atomic(path, payload: dict) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2))
-    os.replace(tmp, path)
+    try:
+        os.replace(tmp, path)
+    except OSError:
+        # Atomic rename can fail on Docker Desktop Windows bind mounts
+        # (gRPC-FUSE visibility lag). Fall back to a direct write.
+        data = tmp.read_text()
+        tmp.unlink(missing_ok=True)
+        path.write_text(data)
 
 
 def fetch_global_endpoints(force: bool = False):
@@ -118,9 +125,7 @@ def fetch_round_data(year: int, round_num: str, endpoint: str) -> list:
                 pages_expected = max(1, (int(total) + PAGE_LIMIT - 1) // PAGE_LIMIT)
                 print(f"({pages_expected}p) ", end="")
             for lap in (
-                mrd["RaceTable"]["Races"][0].get("Laps", [])
-                if mrd["RaceTable"]["Races"]
-                else []
+                mrd["RaceTable"]["Races"][0].get("Laps", []) if mrd["RaceTable"]["Races"] else []
             ):
                 num = lap["number"]
                 if num not in laps_by_number:
@@ -234,9 +239,7 @@ def compute_rounds_to_fetch(races_list: list, existing: dict, endpoint: str) -> 
             to_fetch.add(rn)
 
     data_rounds = [
-        rn
-        for rn, entry in existing.items()
-        if rn in api_rounds and entry.get(items_key)
+        rn for rn, entry in existing.items() if rn in api_rounds and entry.get(items_key)
     ]
     if data_rounds:
         to_fetch.add(max(data_rounds, key=int))
@@ -254,9 +257,9 @@ def update_round_endpoint(year: int, endpoint: str, races_list: list) -> None:
         try:
             table_key = "StandingsLists" if is_standings else "Races"
             payload = json.loads(out.read_text())
-            for entry in payload["MRData"][
-                "StandingsTable" if is_standings else "RaceTable"
-            ][table_key]:
+            for entry in payload["MRData"]["StandingsTable" if is_standings else "RaceTable"][
+                table_key
+            ]:
                 existing[entry["round"]] = entry
         except Exception:
             print(f"  {endpoint}: corrupt file, rebuilding")
@@ -331,9 +334,9 @@ def ingest_year(year: int, force: bool = False, incremental_rounds: bool = False
         fetch_season_endpoint(ep)
 
     if races_list is None:
-        races_list = json.loads((year_dir / "races.json").read_text())["MRData"][
-            "RaceTable"
-        ]["Races"]
+        races_list = json.loads((year_dir / "races.json").read_text())["MRData"]["RaceTable"][
+            "Races"
+        ]
 
     for ep in ROUND_ENDPOINTS:
         if skip_if_exists(f"{ep}.json"):

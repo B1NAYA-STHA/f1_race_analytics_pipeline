@@ -8,6 +8,15 @@ env/
 # Data
 data/
 
-
 .pytest_cache/
 .ruff_cache/
+
+# dbt
+dbt/profiles.yml
+dbt/.user.yml
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Airflow
+logs/

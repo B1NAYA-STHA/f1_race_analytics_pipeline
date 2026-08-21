@@ -36,9 +36,8 @@ class BronzeLoader:
     def create_schema(self) -> bool:
         """Create database schemas (bronze, silver, marts)."""
         try:
-            with self.engine.connect() as conn:
+            with self.engine.begin() as conn:
                 conn.execute(text(get_all_bronze_create_statements()))
-                conn.commit()
             logger.info("✓ Schemas created successfully")
             return True
         except Exception as e:

@@ -89,10 +89,13 @@ models:
   - name: driver_season_summary
     description: "Driver performance summary per season"
     columns:
+      - name: driver_id_season
+        description: "Composite key: driver_id + season"
+        tests: [unique, not_null]
       - name: driver_id
-        tests: [unique, not_null]
+        tests: [not_null]
       - name: season
-        tests: [unique, not_null]
+        tests: [not_null]
       - name: driver_name
         tests: [not_null]
       - name: team
@@ -121,10 +124,13 @@ models:
   - name: constructor_season_summary
     description: "Constructor performance summary per season"
     columns:
+      - name: constructor_id_season
+        description: "Composite key: constructor_id + season"
+        tests: [unique, not_null]
       - name: constructor_id
-        tests: [unique, not_null]
+        tests: [not_null]
       - name: season
-        tests: [unique, not_null]
+        tests: [not_null]
       - name: constructor_name
         tests: [not_null]
       - name: races_entered

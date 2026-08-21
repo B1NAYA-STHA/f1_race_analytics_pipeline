@@ -1,5 +1,10 @@
-requests
-pandas
-psycopg2-binary
-sqlalchemy
-python-dotenv
+# Core pipeline
+requests==2.32.3
+pandas==2.2.2
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.31
+python-dotenv==1.2.3
+
+# dbt transformations (local CLI; Airflow container pins 1.8.x via requirements-airflow.txt)
+dbt-core==1.12.2
+dbt-postgres==1.11.0
