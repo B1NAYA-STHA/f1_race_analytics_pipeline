@@ -17,6 +17,13 @@ DBT_ENV = {
     "PATH": "/home/airflow/.local/bin:/usr/local/bin:/usr/bin:/bin",
 }
 
+KAGGLE_ENV = {
+    "KAGGLE_API_TOKEN": "{{ conn.kaggle_default.password }}",
+    "KAGGLE_DATASET": "binayas/f1-dataset",
+    "HOME": "/home/airflow",
+    "PATH": "/home/airflow/.local/bin:/usr/local/bin:/usr/bin:/bin",
+}
+
 default_args = {
     "owner": "f1_analytics",
     "retries": 1,
@@ -58,4 +65,10 @@ with DAG(
         env=DBT_ENV,
     )
 
-    ingest >> normalize >> bronze_load >> quality_checks >> dbt_build
+    upload_kaggle = BashOperator(
+        task_id="upload_kaggle",
+        bash_command=f"cd {PROJECT} && python src/upload_kaggle.py",
+        env=KAGGLE_ENV,
+    )
+
+    ingest >> normalize >> bronze_load >> quality_checks >> dbt_build >> upload_kaggle

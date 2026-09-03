@@ -20,3 +20,7 @@ dbt/logs/
 
 # Airflow
 logs/
+
+# Deploy (secrets and generated files)
+backups/
+f1-bronze-*.zip

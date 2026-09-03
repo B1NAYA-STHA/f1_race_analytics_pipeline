@@ -8,3 +8,6 @@ python-dotenv==1.2.3
 # dbt transformations (local CLI; Airflow container pins 1.8.x via requirements-airflow.txt)
 dbt-core==1.12.2
 dbt-postgres==1.11.0
+
+# Kaggle upload
+kaggle
