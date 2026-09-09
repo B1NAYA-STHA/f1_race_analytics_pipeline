@@ -51,18 +51,8 @@ def find_kaggle() -> str:
     return "kaggle"
 
 
-def build_metadata(dataset: str, csv_files: list) -> dict:
-    resources = [
-        {"path": f.name, "description": f"{f.stem} bronze table"}
-        for f in sorted(csv_files)
-    ]
-    return {
-        "id": dataset,
-        "title": "F1 Bronze Data",
-        "subtitle": "Formula 1 bronze layer datasets (Ergast/Jolpica)",
-        "licenses": [{"name": "other"}],
-        "resources": resources,
-    }
+def build_metadata(dataset: str) -> dict:
+    return {"id": dataset}
 
 
 def main() -> None:
@@ -93,7 +83,7 @@ def main() -> None:
         sys.exit(1)
 
     metadata_path = BRONZE_DIR / METADATA_FILE
-    metadata = build_metadata(dataset, csv_files)
+    metadata = build_metadata(dataset)
     try:
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=2)
@@ -144,7 +134,7 @@ def main() -> None:
         "-p",
         str(BRONZE_DIR),
         "-m",
-        f"F1 bronze data {timestamp}",
+        f"F1 dataset {timestamp}",
     ]
 
     print(f"Running: {' '.join(cmd)}")
