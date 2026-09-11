@@ -162,5 +162,5 @@ detail_names = {
     "points": "Points",
     "status_category": "Status",
 }
-detail = team_results[detail_cols].sort_values("round").rename(columns=detail_names)
+detail = team_results.sort_values("round")[detail_cols].rename(columns=detail_names)
 st.dataframe(detail, use_container_width=True, hide_index=True)

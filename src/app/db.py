@@ -5,7 +5,7 @@ from functools import lru_cache
 
 import pandas as pd
 import streamlit as st
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 _DB_URL = (
@@ -24,7 +24,7 @@ def get_engine() -> Engine:
 
 def query(sql: str, params: dict | None = None) -> pd.DataFrame:
     with get_engine().connect() as conn:
-        return pd.read_sql(sql, conn, params=params)
+        return pd.read_sql(text(sql), conn, params=params)
 
 
 # ---------------------------------------------------------------------------
