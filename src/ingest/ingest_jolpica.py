@@ -222,29 +222,15 @@ def build_year_endpoint(year: int, endpoint: str, races: list) -> dict:
 
 
 def compute_rounds_to_fetch(races_list: list, existing: dict, endpoint: str) -> set:
-    """Rounds to fetch: missing/empty due rounds plus the latest data round."""
-    items_key = ROUND_ITEMS_KEY[endpoint]
+    """Every due (completed or raced-today) round, so post-race reclassifications
+    and penalties are picked up on incremental runs."""
     today = datetime.now().strftime("%Y-%m-%d")
-    api_rounds = {r["round"] for r in races_list}
 
     due = [r for r in races_list if r.get("date", "") <= today]
     if endpoint == "sprint":
         due = [r for r in due if "Sprint" in r]
 
-    to_fetch = set()
-    for race in due:
-        rn = race["round"]
-        entry = existing.get(rn)
-        if entry is None or not entry.get(items_key):
-            to_fetch.add(rn)
-
-    data_rounds = [
-        rn for rn, entry in existing.items() if rn in api_rounds and entry.get(items_key)
-    ]
-    if data_rounds:
-        to_fetch.add(max(data_rounds, key=int))
-
-    return to_fetch
+    return {r["round"] for r in due}
 
 
 def update_round_endpoint(year: int, endpoint: str, races_list: list) -> None:
@@ -272,6 +258,11 @@ def update_round_endpoint(year: int, endpoint: str, races_list: list) -> None:
     for rn in sorted(to_fetch, key=int):
         print(f"r{rn} ", end="")
         items = fetch_round_data(year, rn, endpoint)
+        # Keep previously stored data if the API now returns nothing for this round
+        # (e.g. transient outage or results briefly unpublished) rather than
+        # wiping it with an empty fetch.
+        if not items and existing.get(rn, {}).get(items_key):
+            continue
         if is_standings:
             entry = {"season": str(year), "round": rn, items_key: items}
         else:
