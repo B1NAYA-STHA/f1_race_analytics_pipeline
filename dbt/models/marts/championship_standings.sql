@@ -12,6 +12,7 @@ with race_results as (
         round,
         finish_position,
         points,
+        sprint_points,
         is_win,
         is_podium,
         source
@@ -36,6 +37,7 @@ points_base as (
         rr.season,
         rr.round,
         rr.points,
+        rr.sprint_points,
         rr.is_win,
         rr.is_podium,
         di.driver_name,
@@ -53,7 +55,7 @@ points_cumulative as (
         pb.round,
         pb.driver_name,
         pb.team,
-        sum(pb.points) over (partition by pb.driver_id, pb.season order by pb.round rows unbounded preceding) as cumulative_points,
+        sum(pb.points + coalesce(pb.sprint_points, 0)) over (partition by pb.driver_id, pb.season order by pb.round rows unbounded preceding) as cumulative_points,
         sum(case when pb.is_win then 1 else 0 end) over (partition by pb.driver_id, pb.season order by pb.round rows unbounded preceding) as wins_so_far,
         sum(case when pb.is_podium then 1 else 0 end) over (partition by pb.driver_id, pb.season order by pb.round rows unbounded preceding) as podiums_so_far,
         pb.source
