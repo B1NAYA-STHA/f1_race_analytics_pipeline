@@ -7,8 +7,6 @@ import streamlit as st
 from db import load_race_results
 from theme import F1_TEMPLATE, TEXT, TEXT_DIM
 
-st.set_page_config(page_title="Results | F1 Analytics", page_icon="🏁", layout="wide")
-
 season = st.session_state.get("season")
 if not season:
     st.warning("Select a season from the sidebar.")
@@ -50,18 +48,6 @@ for _, row in results.iterrows():
             f"Points: {row['points']:.0f}<br>"
             f"Status: {row.get('status_category', 'N/A')}"
         )
-
-# Color scale: green for podium, yellow for points, red for DNF, grey for no data
-def pos_to_color(val):
-    if np.isnan(val):
-        return "#2A2A3A"
-    if val == 1:
-        return "#FFD700"
-    if val <= 3:
-        return "#2E7D32"
-    if val <= 10:
-        return "#1A3A1A"
-    return "#3A1111"
 
 colorscale = [
     [0.0, "#FFD700"],   # P1 gold

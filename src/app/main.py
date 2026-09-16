@@ -36,20 +36,22 @@ with st.sidebar:
     st.caption("Data: Ergast / Jolpica F1 APIs")
     st.caption("Pipeline: Airflow → dbt → PostgreSQL")
 
-# -- Home Page ---------------------------------------------------------------
+pages = {
+    "Season": [
+        st.Page("home.py", title="Overview", icon="🏎️"),
+        st.Page("pages/01_standings.py", title="Standings", icon="🏆"),
+        st.Page("pages/02_progression.py", title="Progression", icon="📈"),
+        st.Page("pages/03_results.py", title="Race Results", icon="🏁"),
+        st.Page("pages/04_qualifying.py", title="Qualifying", icon="⏱️"),
+        st.Page("pages/05_headtohead.py", title="Head-to-Head", icon="⚔️"),
+        st.Page("pages/08_laptimes.py", title="Lap Time", icon="⏱️"),
+        st.Page("pages/09_pitstops.py", title="Pit Stops", icon="🔧"),
+    ],
+    "All-time & Explorer": [
+        st.Page("pages/06_career.py", title="Career Records", icon="🏅"),
+        st.Page("pages/07_circuits.py", title="Circuit Explorer", icon="🌍"),
+    ],
+}
 
-st.title("🏎️ F1 Analytics Dashboard")
-st.markdown(f"### Season {st.session_state['season']}")
-
-st.markdown(
-    """
-    Navigate to a page using the sidebar on the left.
-
-    **Available pages:**
-    - **Standings** — Current season points tally for drivers and constructors
-    - **Progression** — How the championship evolves race by race
-    - **Results** — Race-by-race finishing positions matrix
-    - **Qualifying** — Qualifying vs race performance analysis
-    - **Head-to-Head** — Teammate comparison within a team
-    """
-)
+navigation = st.navigation(pages)
+navigation.run()

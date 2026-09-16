@@ -6,8 +6,6 @@ import streamlit as st
 from db import load_constructor_standings, load_driver_standings
 from theme import F1_TEMPLATE, TEXT, team_color
 
-st.set_page_config(page_title="Standings | F1 Analytics", page_icon="🏆", layout="wide")
-
 season = st.session_state.get("season")
 if not season:
     st.warning("Select a season from the sidebar.")

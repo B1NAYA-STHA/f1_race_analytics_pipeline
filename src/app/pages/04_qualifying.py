@@ -7,8 +7,6 @@ import streamlit as st
 from db import load_qualifying
 from theme import F1_TEMPLATE, TEXT_DIM, team_color
 
-st.set_page_config(page_title="Qualifying | F1 Analytics", page_icon="⏱️", layout="wide")
-
 season = st.session_state.get("season")
 if not season:
     st.warning("Select a season from the sidebar.")
@@ -27,7 +25,7 @@ total_poles = quali["is_pole"].sum()
 pole_wins = quali[quali["is_pole"]]["is_win"].sum()
 pole_conv = (pole_wins / total_poles * 100) if total_poles > 0 else 0
 
-c1, c2, c3 = c1, c2, c3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 c1.metric("Pole Positions", f"{total_poles}")
 c2.metric("Pole to Win", f"{pole_wins}")
 c3.metric("Conversion Rate", f"{pole_conv:.0f}%")
@@ -50,8 +48,8 @@ fig_scatter = px.scatter(
         "positions_gained_lost": True,
         "points": ":.0f",
         "constructor_name": False,
-        "qualifying_position": True,
-        "finish_position": True,
+        "qualifying_position": False,
+        "finish_position": False,
     },
     labels={
         "qualifying_position": "Qualifying Position",

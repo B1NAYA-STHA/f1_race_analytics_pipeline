@@ -78,6 +78,8 @@ F1_CSS = """
 <style>
     /* General */
     .stApp { background-color: #15151E; }
+    [data-testid="stAppViewContainer"] > .main { background: linear-gradient(135deg, #15151E 0%, #181821 55%, #211416 100%); }
+    .block-container { padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1500px; }
     section[data-testid="stSidebar"] { background-color: #0D0D14; }
     section[data-testid="stSidebar"] .stMarkdown p,
     section[data-testid="stSidebar"] .stMarkdown h1,
@@ -106,5 +108,7 @@ F1_CSS = """
 
     /* Divider */
     hr { border-color: #2A2A3A; }
+    .f1-note { border-left: 3px solid #E10600; background: #1E1E2E; color: #A0A0B0; padding: 0.8rem 1rem; margin-top: 1.2rem; }
+    div[data-testid="stMetric"] { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
 </style>
 """

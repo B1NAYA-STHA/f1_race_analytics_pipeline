@@ -54,62 +54,88 @@ circuit_agg as (
 ),
 most_wins as (
     select
-        cr.circuit_id,
-        max(dd.forename || ' ' || dd.surname) as most_wins_driver
-    from circuit_races cr
-    join {{ ref('dim_drivers') }} dd on cr.driver_id = dd.driver_id
-    where cr.is_win
-    group by cr.circuit_id
-    having count(*) = (
-        select max(win_count)
-        from (
-            select circuit_id, driver_id, count(*) as win_count
-            from circuit_races
-            where is_win
-            group by circuit_id, driver_id
-        ) t
-        where t.circuit_id = cr.circuit_id
-    )
+        circuit_id,
+        max(driver_name) as most_wins_driver
+    from (
+        select
+            cr.circuit_id,
+            cr.driver_id,
+            dd.forename || ' ' || dd.surname as driver_name,
+            count(*) as win_count,
+            row_number() over (
+                partition by cr.circuit_id
+                order by count(*) desc, cr.driver_id
+            ) as record_rank
+        from circuit_races cr
+        join {{ ref('dim_drivers') }} dd on cr.driver_id = dd.driver_id
+        where cr.is_win
+        group by cr.circuit_id, cr.driver_id, dd.forename, dd.surname
+    ) ranked
+    where record_rank = 1
+    group by circuit_id
 ),
 most_podiums as (
     select
-        cr.circuit_id,
-        max(dd.forename || ' ' || dd.surname) as most_podiums_driver
-    from circuit_races cr
-    join {{ ref('dim_drivers') }} dd on cr.driver_id = dd.driver_id
-    where cr.is_podium
-    group by cr.circuit_id
-    having count(*) = (
-        select max(podium_count)
-        from (
-            select circuit_id, driver_id, count(*) as podium_count
-            from circuit_races
-            where is_podium
-            group by circuit_id, driver_id
-        ) t
-        where t.circuit_id = cr.circuit_id
-    )
+        circuit_id,
+        max(driver_name) as most_podiums_driver
+    from (
+        select
+            cr.circuit_id,
+            cr.driver_id,
+            dd.forename || ' ' || dd.surname as driver_name,
+            count(*) as podium_count,
+            row_number() over (
+                partition by cr.circuit_id
+                order by count(*) desc, cr.driver_id
+            ) as record_rank
+        from circuit_races cr
+        join {{ ref('dim_drivers') }} dd on cr.driver_id = dd.driver_id
+        where cr.is_podium
+        group by cr.circuit_id, cr.driver_id, dd.forename, dd.surname
+    ) ranked
+    where record_rank = 1
+    group by circuit_id
 ),
 best_qualifying as (
     select
+        circuit_id,
+        max(driver_name) as most_poles_driver
+    from (
+        select
+            cr.circuit_id,
+            cr.driver_id,
+            dd.forename || ' ' || dd.surname as driver_name,
+            count(*) as pole_count,
+            row_number() over (
+                partition by cr.circuit_id
+                order by count(*) desc, cr.driver_id
+            ) as record_rank
+        from circuit_races cr
+        join {{ ref('fact_qualifying') }} fq on cr.race_id = fq.race_id and cr.driver_id = fq.driver_id
+        join {{ ref('dim_drivers') }} dd on cr.driver_id = dd.driver_id
+        where fq.qualifying_position = 1
+        group by cr.circuit_id, cr.driver_id, dd.forename, dd.surname
+    ) ranked
+    where record_rank = 1
+    group by circuit_id
+),
+latest_race as (
+    select distinct on (circuit_id)
+        circuit_id,
+        season as latest_season,
+        race_name as latest_race_name,
+        race_date as latest_race_date
+    from circuit_races
+    order by circuit_id, season desc, round desc, race_date desc
+),
+latest_winner as (
+    select distinct on (cr.circuit_id)
         cr.circuit_id,
-        max(dd.forename || ' ' || dd.surname) as most_poles_driver
+        dd.forename || ' ' || dd.surname as latest_winner
     from circuit_races cr
-    join {{ ref('fact_qualifying') }} fq on cr.race_id = fq.race_id and cr.driver_id = fq.driver_id
     join {{ ref('dim_drivers') }} dd on cr.driver_id = dd.driver_id
-    where fq.qualifying_position = 1
-    group by cr.circuit_id
-    having count(*) = (
-        select max(pole_count)
-        from (
-            select cr2.circuit_id, cr2.driver_id, count(*) as pole_count
-            from circuit_races cr2
-            join {{ ref('fact_qualifying') }} fq2 on cr2.race_id = fq2.race_id and cr2.driver_id = fq2.driver_id
-            where fq2.qualifying_position = 1
-            group by cr2.circuit_id, cr2.driver_id
-        ) t
-        where t.circuit_id = cr.circuit_id
-    )
+    where cr.is_win
+    order by cr.circuit_id, cr.season desc, cr.round desc, cr.race_date desc
 )
 select
     ca.circuit_id,
@@ -134,8 +160,14 @@ select
     mw.most_wins_driver,
     mp.most_podiums_driver,
     bp.most_poles_driver,
+    lr.latest_season,
+    lr.latest_race_name,
+    lr.latest_race_date,
+    lw.latest_winner,
     ca.source
 from circuit_agg ca
 left join most_wins mw on ca.circuit_id = mw.circuit_id
 left join most_podiums mp on ca.circuit_id = mp.circuit_id
 left join best_qualifying bp on ca.circuit_id = bp.circuit_id
+left join latest_race lr on ca.circuit_id = lr.circuit_id
+left join latest_winner lw on ca.circuit_id = lw.circuit_id

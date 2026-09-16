@@ -4,9 +4,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from db import load_constructors, load_race_results
-from theme import F1_TEMPLATE, TEXT, team_color
-
-st.set_page_config(page_title="Head-to-Head | F1 Analytics", page_icon="⚔️", layout="wide")
+from theme import F1_TEMPLATE, team_color
 
 season = st.session_state.get("season")
 if not season:
@@ -36,7 +34,12 @@ if len(drivers) < 2:
     st.info(f"Only one driver found for {team} in {season}.")
     st.stop()
 
-d1, d2 = drivers[0], drivers[1]
+driver_pair = st.selectbox(
+    "Select driver pair",
+    [f"{first} vs {second}" for first in drivers for second in drivers if first < second],
+    key="h2h_pair",
+)
+d1, d2 = driver_pair.split(" vs ", maxsplit=1)
 
 # -- Comparison cards --------------------------------------------------------
 
@@ -76,41 +79,6 @@ with cols[1]:
             st.metric(label, f"{v2:.1f}")
         else:
             st.metric(label, f"{int(v2)}")
-
-# -- Head-to-head bar comparison ----------------------------------------------
-
-st.markdown("---")
-st.header("Head-to-Head Comparison")
-
-labels = list(stats.keys())
-v1_vals = [stats[k][0] for k in labels]
-v2_vals = [stats[k][1] for k in labels]
-
-fig = go.Figure()
-fig.add_trace(go.Bar(
-    name=d1, x=labels, y=v1_vals,
-    marker_color=team_color(team),
-    text=[f"{v:.0f}" if k != "Avg Finish" else f"{v:.1f}" for v, k in zip(v1_vals, labels)],
-    textposition="outside",
-    textfont=dict(color=TEXT),
-))
-fig.add_trace(go.Bar(
-    name=d2, x=labels, y=v2_vals,
-    marker_color="#A0A0B0",
-    text=[f"{v:.0f}" if k != "Avg Finish" else f"{v:.1f}" for v, k in zip(v2_vals, labels)],
-    textposition="outside",
-    textfont=dict(color=TEXT),
-))
-
-fig.update_layout(
-    template=F1_TEMPLATE,
-    barmode="group",
-    height=400,
-    yaxis=dict(title="Count"),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-    margin=dict(l=0, r=20, t=30, b=10),
-)
-st.plotly_chart(fig, use_container_width=True)
 
 # -- Race-by-race finishes ---------------------------------------------------
 
