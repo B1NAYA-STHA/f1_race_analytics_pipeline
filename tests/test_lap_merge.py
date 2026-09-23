@@ -54,7 +54,7 @@ def test_lap_merge_combines_timings_across_pages():
 
     assert len(result) == 2
 
-    lap1 = next(l for l in result if l["number"] == "1")
+    lap1 = next(lap for lap in result if lap["number"] == "1")
     assert len(lap1["Timings"]) == 4
     assert lap1["Timings"] == [
         {"driverId": "hamilton", "position": "1"},
@@ -63,7 +63,7 @@ def test_lap_merge_combines_timings_across_pages():
         {"driverId": "norris", "position": "4"},
     ]
 
-    lap2 = next(l for l in result if l["number"] == "2")
+    lap2 = next(lap for lap in result if lap["number"] == "2")
     assert len(lap2["Timings"]) == 2
 
 
@@ -72,7 +72,7 @@ def test_lap_merge_returns_sorted_by_lap_number():
     with patch("ingest_jolpica.req", side_effect=mock_req):
         result = ingest_jolpica.fetch_round_data(2025, "1", "laps")
 
-    assert [l["number"] for l in result] == ["1", "2"]
+    assert [lap["number"] for lap in result] == ["1", "2"]
 
 
 def test_lap_merge_empty_round():

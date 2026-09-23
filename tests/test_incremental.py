@@ -17,7 +17,7 @@ def test_compute_rounds_to_fetch_missing_empty_and_latest():
         "4": {"round": "4", "Results": []},
     }
     result = ingest_jolpica.compute_rounds_to_fetch(races_list, existing, "results")
-    assert result == {"1", "2", "3"}
+    assert result == {"1", "2", "3", "4"}
 
 
 def test_compute_rounds_to_fetch_skips_non_sprint_rounds():
@@ -102,5 +102,5 @@ def test_update_round_endpoint_creates_file_from_scratch(tmp_path):
 
     payload = json.loads((year_dir / "results.json").read_text())
     rounds = payload["MRData"]["RaceTable"]["Races"]
-    assert [r["round"] for r in rounds] == ["1", "2"]
-    assert payload["MRData"]["total"] == "2"
+    assert [r["round"] for r in rounds] == ["1", "2", "3"]
+    assert payload["MRData"]["total"] == "3"

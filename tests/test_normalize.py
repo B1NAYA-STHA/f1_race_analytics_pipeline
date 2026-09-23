@@ -534,10 +534,10 @@ def test_normalize_is_deterministic(tmp_path):
 
     bronze_a = tmp_path / "bronze_a"
     bronze_b = tmp_path / "bronze_b"
-    normalize.normalize(
+    normalize(
         raw_dir=raw_dir, jolpica_dir=jolpica_dir, bronze_dir=bronze_a, start_year=2026
     )
-    normalize.normalize(
+    normalize(
         raw_dir=raw_dir, jolpica_dir=jolpica_dir, bronze_dir=bronze_b, start_year=2026
     )
 
