@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: bronze
-    database: "{{ env_var('POSTGRES_DB') }}"
+    database: "{{ env_var('POSTGRES_DB', 'f1_warehouse') }}"
     schema: bronze
     tables:
       - name: seasons

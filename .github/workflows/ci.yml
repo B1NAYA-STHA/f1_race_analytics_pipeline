@@ -21,7 +21,7 @@ jobs:
           cache: pip
 
       - name: Install project dependencies
-        run: pip install -e ".[dev,dbt]"
+        run: pip install -e ".[dev,dbt,app]"
 
       - name: Run Python tests
         run: pytest tests -q
