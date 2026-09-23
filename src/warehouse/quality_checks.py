@@ -2,7 +2,7 @@
 
 import sys
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 from sqlalchemy import create_engine, text
 

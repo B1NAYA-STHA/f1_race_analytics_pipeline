@@ -2,7 +2,6 @@
 
 import sys
 import logging
-from pathlib import Path
 from typing import List, Literal
 
 import pandas as pd
@@ -180,7 +179,7 @@ def main():
             return 1
 
         # Step 2: Load all tables
-        results = loader.load_all_tables(if_exists="replace")
+        loader.load_all_tables(if_exists="replace")
 
         # Step 3: Validate
         if not loader.validate_load():

@@ -138,7 +138,7 @@ def fetch_round_data(year: int, round_num: str, endpoint: str) -> list:
             page += 1
         merged = [laps_by_number[k] for k in sorted(laps_by_number, key=int)]
         laps_count = len(merged)
-        timings_count = sum(len(l.get("Timings", [])) for l in merged)
+        timings_count = sum(len(lap.get("Timings", [])) for lap in merged)
         print(f"({page} pages, {laps_count} laps, {timings_count} timings)", end="")
         return merged
 

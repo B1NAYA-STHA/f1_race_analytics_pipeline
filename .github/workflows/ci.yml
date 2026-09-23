@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install project dependencies
+        run: pip install -e ".[dev,dbt]"
+
+      - name: Run Python tests
+        run: pytest tests -q
+
+      - name: Run Ruff
+        run: ruff check src tests
+
+      - name: Compile Python modules
+        run: python -m compileall -q src
+
+      - name: Install dbt packages
+        working-directory: dbt
+        run: dbt deps --profiles-dir .
+
+      - name: Validate dbt project
+        working-directory: dbt
+        run: |
+          cp profiles.yml.example profiles.yml
+          dbt parse --profiles-dir . --target dev
