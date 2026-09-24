@@ -2,18 +2,24 @@
 
 import os
 from functools import lru_cache
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from sqlalchemy import create_engine, text
+from sqlalchemy import URL, create_engine, text
 from sqlalchemy.engine import Engine
+from dotenv import load_dotenv
 
-_DB_URL = (
-    f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}"
-    f":{os.getenv('POSTGRES_PASSWORD', 'postgres_password')}"
-    f"@{os.getenv('POSTGRES_HOST', 'localhost')}"
-    f":{os.getenv('POSTGRES_PORT', '5432')}"
-    f"/{os.getenv('POSTGRES_DB', 'f1_warehouse')}"
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
+_DB_URL = URL.create(
+    drivername="postgresql+psycopg2",
+    username=os.getenv("POSTGRES_USER", "postgres"),
+    password=os.getenv("POSTGRES_PASSWORD", "postgres_password"),
+    host=os.getenv("POSTGRES_HOST", "localhost"),
+    port=int(os.getenv("POSTGRES_PORT", "5432")),
+    database=os.getenv("POSTGRES_DB", "f1_warehouse"),
+    query={"sslmode": os.getenv("POSTGRES_SSLMODE", "prefer")},
 )
 
 

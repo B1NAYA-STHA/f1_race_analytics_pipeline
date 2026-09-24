@@ -1,0 +1,67 @@
+name: F1 Data Pipeline
+
+on:
+  schedule:
+    - cron: "0 22 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: f1-production-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_SSLMODE: require
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      KAGGLE_DATASET: ${{ secrets.KAGGLE_DATASET }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install pipeline dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ingest source data
+        run: python src/ingest/ingest_main.py
+
+      - name: Normalize bronze data
+        run: python src/normalize/normalize.py
+
+      - name: Load bronze warehouse
+        run: python src/warehouse/loader.py
+
+      - name: Run warehouse quality checks
+        run: python src/warehouse/quality_checks.py
+
+      - name: Install dbt packages
+        working-directory: dbt
+        run: |
+          cp profiles.yml.example profiles.yml
+          dbt deps --profiles-dir .
+
+      - name: Build and test dbt warehouse
+        working-directory: dbt
+        run: |
+          dbt build --profiles-dir . --target dev
+          dbt test --profiles-dir . --target dev
+
+      - name: Publish bronze dataset to Kaggle
+        run: python src/upload_kaggle.py

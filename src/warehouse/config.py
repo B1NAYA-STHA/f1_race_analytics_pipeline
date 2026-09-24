@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from sqlalchemy import URL
 
 # Load .env file from project root
 env_path = Path(__file__).parent.parent.parent / ".env"
@@ -17,16 +18,33 @@ class DatabaseConfig:
     DB = os.getenv("POSTGRES_DB", "f1_warehouse")
     USER = os.getenv("POSTGRES_USER", "postgres")
     PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres_password")
+    SSLMODE = os.getenv("POSTGRES_SSLMODE", "prefer")
     
     @classmethod
     def get_connection_string(cls) -> str:
         """Return psycopg2 connection string."""
-        return f"postgresql://{cls.USER}:{cls.PASSWORD}@{cls.HOST}:{cls.PORT}/{cls.DB}"
+        return URL.create(
+            drivername="postgresql",
+            username=cls.USER,
+            password=cls.PASSWORD,
+            host=cls.HOST,
+            port=cls.PORT,
+            database=cls.DB,
+            query={"sslmode": cls.SSLMODE},
+        ).render_as_string(hide_password=False)
     
     @classmethod
     def get_sqlalchemy_uri(cls) -> str:
         """Return SQLAlchemy connection URI."""
-        return f"postgresql+psycopg2://{cls.USER}:{cls.PASSWORD}@{cls.HOST}:{cls.PORT}/{cls.DB}"
+        return URL.create(
+            drivername="postgresql+psycopg2",
+            username=cls.USER,
+            password=cls.PASSWORD,
+            host=cls.HOST,
+            port=cls.PORT,
+            database=cls.DB,
+            query={"sslmode": cls.SSLMODE},
+        ).render_as_string(hide_password=False)
     
     @classmethod
     def validate(cls) -> bool:
