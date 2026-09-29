@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from sqlalchemy import URL
+from sqlalchemy.engine.url import URL
 
 # Load .env file from project root
 env_path = Path(__file__).parent.parent.parent / ".env"

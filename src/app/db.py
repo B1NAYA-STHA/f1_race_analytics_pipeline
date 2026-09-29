@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from sqlalchemy import URL, create_engine, text
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine.url import URL
 from sqlalchemy.engine import Engine
 from dotenv import load_dotenv
 
