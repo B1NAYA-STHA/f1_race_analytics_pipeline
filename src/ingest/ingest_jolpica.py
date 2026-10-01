@@ -2,6 +2,7 @@ import json
 import os
 import time
 import argparse
+import random
 from datetime import datetime
 from pathlib import Path
 import sys
@@ -33,6 +34,20 @@ def calc_backoff(attempt: int) -> int:
     return min(BACKOFF_BASE * (2**attempt), MAX_BACKOFF)
 
 
+def _retry_after(resp) -> int | None:
+    """Honour a Retry-After header when the API sends one."""
+    try:
+        value = resp.headers.get("Retry-After")
+    except (AttributeError, TypeError):
+        return None
+    if not value:
+        return None
+    try:
+        return max(0, int(float(value)))
+    except (TypeError, ValueError):
+        return None
+
+
 def rate_limited_request(url: str) -> dict:
     global _last_request
     for attempt in range(MAX_RETRIES):
@@ -47,8 +62,10 @@ def rate_limited_request(url: str) -> dict:
             return resp.json()
 
         if resp.status_code == 429:
-            backoff = calc_backoff(attempt)
-            print(f"    429  backing off {backoff}s...")
+            backoff = _retry_after(resp) or calc_backoff(attempt)
+            # Jitter so parallel requests don't retry in lockstep.
+            backoff += random.uniform(0, 1) * 0.2 * backoff
+            print(f"    429  backing off {backoff:.0f}s...")
             time.sleep(backoff)
             _last_request = time.perf_counter()
             continue

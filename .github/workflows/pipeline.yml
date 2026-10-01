@@ -15,7 +15,9 @@ permissions:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Cold start re-ingests 1950-2024 history + current season; with a shared
+    # runner IP and polite Jolpica backoff this can take well over an hour.
+    timeout-minutes: 180
     env:
       POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
       POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
@@ -25,10 +27,22 @@ jobs:
       POSTGRES_SSLMODE: require
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
       KAGGLE_DATASET: ${{ secrets.KAGGLE_DATASET }}
+      # GitHub runners share egress IPs, so Jolpica throttles them far harder
+      # than a local machine. Slow down and retry far more patiently.
+      JOLPICA_RATE_LIMIT_INTERVAL: "4"
+      JOLPICA_MAX_RETRIES: "12"
+      JOLPICA_MAX_BACKOFF: "300"
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Restore cached raw data
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: raw-${{ github.run_id }}
+          restore-keys: raw-
 
       - name: Set up Python
         uses: actions/setup-python@v5

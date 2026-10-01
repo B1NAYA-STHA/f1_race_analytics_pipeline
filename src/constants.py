@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 # Project paths
@@ -52,11 +53,13 @@ HISTORICAL_FILE_MAP = {
 # Jolpica API config
 JOLPICA_BASE = "https://api.jolpi.ca/ergast/f1"
 API_START_YEAR = 2025  # API covers from here on; CSV source covers 1950-2024
-RATE_LIMIT_INTERVAL = 2.5  # seconds between requests
+# Overridable for CI: GitHub runners share egress IPs and get throttled harder
+# than a local machine, so cold-start ingests need a longer retry ladder.
+RATE_LIMIT_INTERVAL = float(os.getenv("JOLPICA_RATE_LIMIT_INTERVAL", 2.5))
 PAGE_LIMIT = 100  # max items per API page
-MAX_RETRIES = 7  # retry attempts on 429 before failing
+MAX_RETRIES = int(os.getenv("JOLPICA_MAX_RETRIES", 7))  # retry attempts on 429 before failing
 BACKOFF_BASE = 5  # seconds, doubles each attempt
-MAX_BACKOFF = 120  # cap on each backoff wait
+MAX_BACKOFF = int(os.getenv("JOLPICA_MAX_BACKOFF", 120))  # cap on each backoff wait
 
 # Endpoint lists
 GLOBAL_ENDPOINTS = ["seasons", "status"]
