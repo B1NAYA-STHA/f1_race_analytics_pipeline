@@ -13,14 +13,25 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
+
+def _setting(name: str, default: str) -> str:
+    value = os.getenv(name)
+    if value is not None:
+        return value
+    try:
+        return str(st.secrets.get(name, default))
+    except (FileNotFoundError, KeyError):
+        return default
+
+
 _DB_URL = URL.create(
     drivername="postgresql+psycopg2",
-    username=os.getenv("POSTGRES_USER", "postgres"),
-    password=os.getenv("POSTGRES_PASSWORD", "postgres_password"),
-    host=os.getenv("POSTGRES_HOST", "localhost"),
-    port=int(os.getenv("POSTGRES_PORT", "5432")),
-    database=os.getenv("POSTGRES_DB", "f1_warehouse"),
-    query={"sslmode": os.getenv("POSTGRES_SSLMODE", "prefer")},
+    username=_setting("POSTGRES_USER", "postgres"),
+    password=_setting("POSTGRES_PASSWORD", "postgres_password"),
+    host=_setting("POSTGRES_HOST", "localhost"),
+    port=int(_setting("POSTGRES_PORT", "5432")),
+    database=_setting("POSTGRES_DB", "f1_warehouse"),
+    query={"sslmode": _setting("POSTGRES_SSLMODE", "prefer")},
 )
 
 
