@@ -1,262 +1,216 @@
 # F1 Analytics
 
-F1 Analytics is an end-to-end Formula 1 data platform. It collects historical and current-season data, normalizes it into a consistent model, loads it into PostgreSQL, transforms it with dbt, and exposes the results through a Streamlit analytics dashboard.
+An end-to-end Formula 1 data platform built to turn historical and live race data into reliable, queryable analytics.
 
-The project follows a medallion architecture:
+F1 Analytics combines a resilient ingestion pipeline, a PostgreSQL warehouse, dbt transformations, scheduled orchestration, automated quality checks, Kaggle publishing, and an interactive Streamlit dashboard.
+
+## Project Overview
+
+The platform unifies two eras of Formula 1 data:
+
+- Historical Ergast archive data covering 1950-2024
+- Current and incremental data from the Jolpica F1 API
+
+The result is a consistent analytical model that supports season analysis, career records, circuit exploration, lap-time analysis, and pit-stop analysis.
+
+## Architecture
 
 ```text
-Ergast archive + Jolpica API
-            |
-            v
-      data/raw/             Raw source files and API responses
-            |
-            v
-      data/bronze/          Unified normalized CSV tables
-            |
-            v
-      PostgreSQL bronze     Source-aligned warehouse tables
-            |
-            v
-      dbt silver             Clean dimensions and facts
-            |
-            v
-      dbt marts              Analytics-ready tables
-            |
-            v
-      Streamlit dashboard + Kaggle dataset
+                         +----------------------+
+                         | Ergast CSV archive   |
+                         +----------+-----------+
+                                    |
+                         +----------v-----------+
+                         | Jolpica F1 API       |
+                         +----------+-----------+
+                                    |
+                                    v
+                         +----------------------+
+                         | Ingestion             |
+                         | pagination, retries,  |
+                         | incremental updates   |
+                         +----------+-----------+
+                                    |
+                                    v
+                         +----------------------+
+                         | Raw storage           |
+                         | data/raw               |
+                         +----------+-----------+
+                                    |
+                                    v
+                         +----------------------+
+                         | Normalization         |
+                         | ID resolution, merging |
+                         | lineage tracking       |
+                         +----------+-----------+
+                                    |
+                                    v
+                         +----------------------+
+                         | Bronze                 |
+                         | 13 unified CSV tables |
+                         +----------+-----------+
+                                    |
+                                    v
+                         +----------------------+
+                         | PostgreSQL warehouse  |
+                         | bronze / silver /     |
+                         | marts schemas         |
+                         +----------+-----------+
+                                    |
+                                    v
+                         +----------------------+
+                         | dbt                   |
+                         | dimensions, facts,    |
+                         | analytics marts       |
+                         +----------+-----------+
+                                    |
+                 +------------------+------------------+
+                 |                                     |
+                 v                                     v
+        Streamlit dashboard                    Kaggle dataset
 ```
 
-## What The Project Provides
+## Highlights
 
-- Historical F1 data from the Ergast CSV archive, covering 1950-2024.
-- Current-season data from the Jolpica F1 API.
-- Resumable and idempotent ingestion with pagination, retries, and incremental race updates.
-- Unified bronze tables combining historical and API data.
-- PostgreSQL warehouse schemas for bronze, silver, and marts layers.
-- dbt models for race results, standings, career records, circuit statistics, lap times, and pit stops.
-- Airflow orchestration for scheduled pipeline execution.
-- A Streamlit dashboard with season analytics and all-time exploration pages.
-- Automated Kaggle dataset publishing after successful pipeline runs.
+### Resilient ingestion
 
-## Data Sources
+- Historical archive download with completeness checks
+- Jolpica API pagination based on API-reported totals
+- Retry and exponential backoff for rate limits and transient failures
+- Incremental refresh of completed and newly available race rounds
+- Idempotent and resumable pipeline behavior
 
-| Source                                                                                            | Coverage     | Format      | Purpose                      |
-| ------------------------------------------------------------------------------------------------- | ------------ | ----------- | ---------------------------- |
-| [Ergast archive](https://raceoptidatapublicfiles.blob.core.windows.net/ergast2024/ergast_2024.zip) | 1950-2024    | CSV archive | Historical source            |
-| [Jolpica F1 API](https://api.jolpi.ca/ergast/f1)                                                   | 2025-current | JSON API    | Current and incremental data |
+### Medallion warehouse design
 
-## Kaggle Dataset
+- **Bronze:** source-aligned normalized tables with data lineage
+- **Silver:** typed dimensions and fact tables built with dbt
+- **Marts:** analytics-ready models designed for dashboard queries
 
-The normalized F1 dataset is published here:
+### Data quality
 
-[F1 Dataset on Kaggle](https://www.kaggle.com/datasets/binayas/f1-dataset)
+- Python unit tests for ingestion, pagination, retries, normalization, and incremental behavior
+- dbt uniqueness, not-null, relationship, lineage, and integrity tests
+- Bronze loading validation with table and row-count checks
+- CI validation on pushes and pull requests
 
-The Airflow pipeline can upload a new Kaggle dataset version after dbt and quality checks complete successfully.
+### Automation
+
+GitHub Actions provides two operational paths:
+
+- CI validation for tests, linting, compilation, and dbt parsing
+- Scheduled pipeline execution for ingestion, warehouse loading, dbt builds, validation, and Kaggle publishing
+
+The project also includes an Airflow DAG for local orchestration and production-style workflow demonstration.
+
+## Dashboard
+
+The Streamlit application is organized around two analytical perspectives.
+
+### Season analytics
+
+- Season overview with championship leaders and latest race context
+- Driver and constructor standings
+- Championship progression by round
+- Race-results finishing-position heatmap
+- Qualifying versus race performance
+- Teammate head-to-head comparisons
+- Race-level lap-time analysis
+- Race-level pit-stop analysis
+
+### All-time and exploration
+
+- Driver and constructor career leaderboards
+- World circuit map with selectable locations
+- Circuit records for wins, podiums, and poles
+- Latest race and winner for each circuit
+
+The dashboard reads from the PostgreSQL `marts` schema and uses cached queries for responsive exploration.
+
+## Warehouse Models
+
+The warehouse contains source and analytical entities for:
+
+- Seasons
+- Circuits
+- Drivers
+- Constructors
+- Races
+- Race results
+- Qualifying
+- Sprint results
+- Lap times
+- Pit stops
+- Driver standings
+- Constructor standings
+
+The dbt marts layer includes:
+
+- `race_results_detail`
+- `championship_standings`
+- `driver_season_summary`
+- `constructor_season_summary`
+- `driver_career`
+- `constructor_career`
+- `circuit_stats`
+- `qualifying_vs_race`
+- `lap_time_analysis`
+- `pit_stop_analysis`
+
+## Project Scope
+
+```text
+13       bronze source tables
+23       dbt models
+226      dbt data tests
+23       Python tests
+631,000+ lap-time records
+1950+    historical coverage
+2025+    live API coverage
+```
 
 ## Repository Structure
 
 ```text
 .
-|-- dags/                       Airflow DAGs
-|-- data/
-|   |-- raw/                    Downloaded archives and API responses
-|   `-- bronze/                 Normalized bronze CSV tables
+|-- dags/                       Airflow orchestration
 |-- dbt/
-|   |-- models/silver/          Clean dimensions and facts
+|   |-- models/silver/          Typed dimensions and facts
 |   |-- models/marts/           Analytics-ready models
-|   |-- profiles.yml            Local dbt profile
+|   |-- tests/                  Singular dbt integrity tests
 |   `-- dbt_project.yml
 |-- src/
-|   |-- ingest/                 Historical and Jolpica ingestion
-|   |-- normalize/              Historical/API normalization
-|   |-- warehouse/              PostgreSQL loading and quality checks
+|   |-- ingest/                 Historical and API ingestion
+|   |-- normalize/              Source normalization
+|   |-- warehouse/              PostgreSQL loading and validation
 |   |-- app/                    Streamlit dashboard
-|   `-- upload_kaggle.py        Kaggle publishing script
-|-- tests/                      Python tests
-|-- docker-compose.yml          PostgreSQL and Airflow services
-|-- Dockerfile.airflow          Airflow image definition
-|-- requirements.txt            Local Python dependencies
-`-- requirements-airflow.txt   Airflow image dependencies
+|   `-- upload_kaggle.py        Kaggle dataset publishing
+|-- tests/                      Python test suite
+|-- docker-compose.yml          Local PostgreSQL and Airflow services
+|-- Dockerfile.airflow          Airflow runtime image
+`-- pyproject.toml              Project and tool configuration
 ```
 
-## Requirements
+## Published Dataset
 
-- Python 3.10 or newer
-- Docker Desktop with Docker Compose
-- Git
-- PostgreSQL client tools are optional
-- A Kaggle API token is required only for Kaggle publishing
+The normalized dataset is published on Kaggle:
 
-## Configuration
+[F1 Dataset on Kaggle](https://www.kaggle.com/datasets/binayas/f1-dataset)
 
-Create a `.env` file in the repository root. Keep it local and never commit it.
+## Data Sources
 
-Example local database settings:
+- [Ergast archive](https://raceoptidatapublicfiles.blob.core.windows.net/ergast2024/ergast_2024.zip)
+- [Jolpica F1 API](https://api.jolpi.ca/ergast/f1)
 
-```env
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=f1_warehouse
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres_password
-```
+## Why This Project
 
-For Kaggle publishing, also configure:
-
-```env
-KAGGLE_API_TOKEN=KGAT_your_token
-KAGGLE_DATASET=binayas/f1-dataset
-```
-
-Airflow receives its runtime environment from `docker-compose.yml`. The local Compose configuration uses the PostgreSQL service name `postgres` so containers can communicate over the Docker network.
-
-## Local Setup
-
-Create and activate a virtual environment:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-Install the local application and development dependencies:
-
-```powershell
-pip install -r requirements.txt
-pip install -e ".[dev,dbt,app]"
-```
-
-Start PostgreSQL and Airflow:
-
-```powershell
-docker compose up -d --build
-```
-
-Useful local URLs:
-
-- Streamlit: http://localhost:8501
-- Airflow: http://localhost:8081
-- PostgreSQL: `localhost:5432`
-
-The default local Airflow credentials are configured in `docker-compose.yml`. Change them before exposing Airflow outside the local machine.
-
-## Run The Pipeline Manually
-
-Run ingestion:
-
-```powershell
-python src/ingest/ingest_main.py
-```
-
-Useful ingestion options:
-
-```powershell
-python src/ingest/ingest_main.py --year 2025
-python src/ingest/ingest_main.py --force
-```
-
-Normalize the raw sources into bronze CSVs:
-
-```powershell
-python src/normalize/normalize.py
-```
-
-Load bronze data into PostgreSQL:
-
-```powershell
-python src/warehouse/loader.py
-```
-
-Run warehouse quality checks:
-
-```powershell
-python src/warehouse/quality_checks.py
-```
-
-Build the dbt silver and marts layers:
-
-```powershell
-cd dbt
-dbt build --profiles-dir . --target dev
-cd ..
-```
-
-Publish the normalized dataset to Kaggle:
-
-```powershell
-python src/upload_kaggle.py
-```
-
-## Airflow Scheduling
-
-The DAG is defined in [dags/f1_race_weekend.py](dags/f1_race_weekend.py). It runs the complete workflow:
+This project was designed as a practical data-engineering system rather than a one-off analysis. It demonstrates the complete path from unreliable external sources to trusted analytical products:
 
 ```text
-ingest -> normalize -> bronze load -> quality checks -> dbt build -> Kaggle upload
+source systems -> ingestion -> normalized data -> warehouse -> tested marts -> user-facing analytics
 ```
 
-The current schedule is Sunday at 22:00 UTC:
+It also demonstrates the boundary between development and production concerns: Docker and Airflow support local orchestration, while hosted PostgreSQL and scheduled GitHub Actions support the deployed data flow.
 
-```text
-0 22 * * 0
-```
+## Data Notice
 
-Airflow can also be triggered manually from the web UI. The scheduler must remain running for scheduled executions to occur.
-
-## Streamlit Dashboard
-
-Start the dashboard directly from the repository root:
-
-```powershell
-streamlit run src/app/main.py
-```
-
-The dashboard is organized into two navigation groups.
-
-### Season
-
-These pages respond to the global season selector:
-
-- Overview: current leader, constructor leader, latest race, and race winners.
-- Standings: driver and constructor championship tables.
-- Progression: championship progression by round.
-- Race Results: driver finishing-position heatmap.
-- Qualifying: qualifying position versus race finish.
-- Head-to-Head: teammate comparison.
-- Lap Time: race-level pace and delta-to-best analysis.
-- Pit Stops: race-level stop-duration and strategy analysis.
-
-### All-time and Explorer
-
-These pages are not restricted to the selected season:
-
-- Career Records: all-time driver and constructor leaderboards.
-- Circuit Explorer: world map, circuit records, latest race, and latest winner.
-
-Dashboard query results are cached for 15 minutes. The sidebar refresh button clears the Streamlit cache when new warehouse data has been loaded.
-
-## Testing And Validation
-
-Run the Python test suite:
-
-```powershell
-python -m pytest
-```
-
-Run linting:
-
-```powershell
-ruff check src tests
-```
-
-Compile the application modules:
-
-```powershell
-python -m compileall -q src/app
-```
-
-The Streamlit pages can be smoke-tested with `streamlit.testing.v1.AppTest` after PostgreSQL and the marts tables are available.
-
-## License And Data Notice
-
-This project is an educational and engineering analytics project. Source data is obtained from the Ergast archive and Jolpica F1 API. Refer to those providers' terms and attribution requirements when redistributing or publishing derived datasets.
+This is an educational and engineering analytics project. Source data is obtained from the Ergast archive and Jolpica F1 API. Refer to the respective providers' terms and attribution requirements when redistributing or publishing derived datasets.
